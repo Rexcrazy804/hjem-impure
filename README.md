@@ -7,15 +7,19 @@ No more waiting for your configuration to build to test changes!
 ### What does it do exactly?
 hjem-impure reads your `hjem.users.${myUserName}.xdg.config.files` attrset 
 and filters through it to identify config files that are simply links
-to your nixos configuration directory. For instance
-
-```
-xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf
-```
-
-with this information, a script `hjem-impure` is created 
-that effectively overwrites the /nix/store link hjem creates
+to your nixos configuration directory. 
+With this information, a script `hjem-impure` is created 
+that effectively overwrites the `/nix/store/...` link hjem creates
 into relative links to your nixos configuration
+
+Suppose you have the lines `xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf`
+in your `/home/myuser/user.nix`.
+Hjem would create a symlink at `.config/hypr/hypland.conf` to `/nix/store/98p1jnnhh146kkllrj9jfd7if5hbmqws-hyprland.conf`,
+which is a path in the non-readable nix store.
+When you run the `hjem-impure` script, the symlink at `.config/hypr/hyplrand.conf`
+is replaced with a symlink to `/home/myuser/mydots/hyplrand/hyprland.conf`.
+
+Pretty simple right? Its absurdly effective too!
 
 ### Installation
 First, add hjem-impure to your flake inputs
@@ -53,3 +57,4 @@ systemd-tmpfiles --user --create
 
 ### Acknowledgements
 [hjem-rum](https://github.com/snugnug/hjem-rum) my reference for creating this module
+jade's [use nix less](https://jade.fyi/blog/use-nix-less/) sparked the idea for this and I've gratefully used their script as a base for `hjem-impure`
