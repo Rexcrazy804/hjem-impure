@@ -62,5 +62,5 @@ systemd-tmpfiles --user --create
 ```
 
 ### Acknowledgements
-[hjem-rum](https://github.com/snugnug/hjem-rum) my reference for creating this module
-jade's [use nix less](https://jade.fyi/blog/use-nix-less/) sparked the idea for this and I've gratefully used their script as a base for `hjem-impure`
+- [hjem-rum](https://github.com/snugnug/hjem-rum) my reference for creating this module
+- jade's [use nix less](https://jade.fyi/blog/use-nix-less/) sparked the idea for this and I've gratefully used their script as a base for `hjem-impure`
