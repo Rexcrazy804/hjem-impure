@@ -50,7 +50,11 @@ Finally, enable hjem impure for your desired user
 ```
 
 ### Usage
-simple run `hjem-impure` to create the relative symlinks overwriting existing ones.
+simple run the blow to create the relative symlinks overwriting existing ones.
+```
+hjem-impure
+``` 
+
 The next nixos-rebuild will overwrite hjem-impure's relative links.
 Alternatively you can also re-create hjem's /nix/store links using
 ```bash
