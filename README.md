@@ -44,12 +44,12 @@ and enable hjem impure for your desired user
     hjem.users.${myUserName} = {
         impure = {
             enable = true;                                                      # enable hjem-impure
-            dotsDir = ./myDotsFolder;                                           # pure path to dotsFolder
+            dotsDir = "${./myDotsFolder}";                                      # pure path to dotsFolder AS STRING
             dotsDirImpure = "/home/myuser/nixos/myDotsFolder";                  # impure absolte path to dots folder
         };
 
         xdg.config.files = let 
-            dots = config.hjem.users.${myUserName}.impure.dotsDir;              # this is a string with /nix/store path to the dotsFolder
+            dots = config.hjem.users.${myUserName}.impure.dotsDir;
         in {
             "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf"      # all links that youd like to use with hjem-impure must use `dots`
         };
