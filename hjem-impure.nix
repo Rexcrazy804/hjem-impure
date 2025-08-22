@@ -6,7 +6,7 @@
 }: let
   inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib.types) path str;
+  inherit (lib.types) str;
   planter = pkgs.writeScriptBin "hjem-impure" ''
     set -euo pipefail
     function symlink() {
@@ -30,9 +30,8 @@ in {
   options.impure = {
     enable = mkEnableOption "hjem impure planting script";
     dotsDir = mkOption {
-      type = path;
+      type = str;
       description = "directory containing your dots";
-      apply = x: "${x}";
     };
     dotsDirImpure = mkOption {
       type = str;
@@ -44,6 +43,11 @@ in {
       default = config.xdg.config.files;
       description = "files to impurely link";
       apply = x: attrValues x;
+    };
+    # debugging only
+    script = mkOption {
+      readOnly = true;
+      default = planter;
     };
   };
   config = mkIf config.impure.enable {
