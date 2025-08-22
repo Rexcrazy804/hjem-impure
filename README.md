@@ -1,16 +1,16 @@
 # Hjem impure
-A simple hjem module that provides a script 
-to overwrite `/nix/store/...` links created by hjem 
+A simple hjem module that provides a script
+to overwrite `/nix/store/...` links created by hjem
 with relative links to your nixos configuration on demand.
 No more waiting for your configuration to build to test changes!
 
 https://github.com/user-attachments/assets/3648a751-77c8-4336-b60e-19969ec27d98
 
 ### What does it do exactly?
-hjem-impure reads your `hjem.users.${myUserName}.xdg.config.files` attrset 
+hjem-impure reads your `hjem.users.${myUserName}.xdg.config.files` attrset
 and filters through it to identify config files that are simply links
-to your nixos configuration directory. 
-With this information, a script `hjem-impure` is created 
+to your nixos configuration directory.
+With this information, a script `hjem-impure` is created
 that effectively overwrites the `/nix/store/...` link hjem creates
 into relative links to your nixos configuration
 
@@ -50,10 +50,23 @@ and enable hjem impure for your desired user
             dotsDirImpure = "/home/myuser/nixos/myDotsFolder";                  # impure absolute path to dots folder
         };
 
-        xdg.config.files = let 
+        # NOTE
+        # by default hjem-impure parses `files` and `xdg.config.files`
+        # see `impure.linkFiles` for altering this behavior
+
+        xdg.config.files = let
             dots = config.hjem.users.${myUserName}.impure.dotsDir;
         in {
             "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";     # all links that youd like to use with hjem-impure must use `dots`
+        };
+
+        # or alternatively
+        files = let
+            # this is repeated here but you can always use
+            # a top level let in to deduplicate
+            dots = config.hjem.users.${myUserName}.impure.dotsDir;
+        in {
+            ".config/hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";
         };
     };
 }
@@ -63,7 +76,7 @@ and enable hjem impure for your desired user
 simply run the below to create the relative symlinks overwriting existing ones.
 ```
 hjem-impure
-``` 
+```
 
 The next nixos-rebuild will overwrite hjem-impure's relative links.
 Alternatively you can also re-create hjem's /nix/store links using
