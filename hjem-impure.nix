@@ -6,8 +6,8 @@
 }: let
   inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg pathExists;
-  inherit (lib.types) str;
+  inherit (lib) assertMsg pathExists foldl;
+  inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
 
@@ -22,7 +22,11 @@
         ln -sfv "$1" "$2"
     }
 
-    ${symlinkFiles}
+    ${
+      if symlinkFiles == ""
+      then "echo 'No files to symlink'"
+      else symlinkFiles
+    }
   '';
 
   symlinkFiles = pipe cfg.linkFiles [
@@ -46,10 +50,26 @@ in {
       example = "/home/bobrose/myNixosConfig/";
     };
     linkFiles = mkOption {
-      readOnly = true;
-      default = config.xdg.config.files;
-      description = "files to impurely link";
-      apply = x: attrValues x;
+      # TODO: should this be relaxed?
+      type = listOf (enum [
+        config.files
+        config.xdg.config.files
+        config.xdg.data.files
+        config.xdg.state.files
+        config.xdg.cache.files
+      ]);
+      default = [
+        config.xdg.config.files
+        config.files
+      ];
+      description = "list of attrbute sets to parse files from";
+      example = ''
+        [
+          hjem.users.''${userName}.xdg.config.files
+          hjem.users.''${userName}.xdg.data.files
+        ]
+      '';
+      apply = x: foldl (acc: curr: acc ++ (attrValues curr)) [] x;
     };
     # debugging only
     script = mkOption {
@@ -58,15 +78,6 @@ in {
     };
   };
   config = mkIf cfg.enable {
-    assertions = [
-      {
-        assertion = cfg.linkFiles != [];
-        message = ''
-          hjem impure only supports `hjem.users.${config.user}.xdg.config.files` presently.
-          Please relocate your `files.".config/myprogram/*"` into `xdg.config.files."myprogram/*"`
-        '';
-      }
-    ];
     warnings = optional (symlinkFiles == "") "hjem-impure detected zero files to symlink";
     packages = [planter];
   };
