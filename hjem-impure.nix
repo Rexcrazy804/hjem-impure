@@ -6,6 +6,7 @@
 }: let
   inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
+  inherit (lib) assertMsg pathExists;
   inherit (lib.types) str;
   planter = pkgs.writeScriptBin "hjem-impure" ''
     set -euo pipefail
@@ -23,6 +24,9 @@
 
   symlinkFiles = pipe config.impure.linkFiles [
     (filter (x: x ? source && hasPrefix "${config.impure.dotsDir}" "${x.source}"))
+    # ensures that paths are valid.
+    # Throws an error if they aren't
+    (filter (x: assert (assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"); true))
     (map (x: "symlink ${config.impure.dotsDirImpure}${removePrefix "${config.impure.dotsDir}" "${x.source}"} ${x.target}"))
     (concatStringsSep "\n")
   ];
