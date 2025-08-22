@@ -35,22 +35,30 @@ First, add hjem-impure to your flake inputs
 ```
 
 Next, add hjem-impure as an extraModule for hjem
+and enable hjem impure for your desired user
 ```nix
 {
-    hjem.extraModules = [inputs.hjem-impure.hjemModules.default];
-}
-```
+    hjem.extraModules = [
+        inputs.hjem-impure.hjemModules.default                                  # imports the hjemModule
+    ];
+    hjem.users.${myUserName} = {
+        impure = {
+            enable = true;                                                      # enable hjem-impure
+            dotsDir = ./myDotsFolder;                                           # pure path to dotsFolder
+            dotsDirImpure = "/home/myuser/nixos/myDotsFolder";                  # impure absolte path to dots folder
+        };
 
-Finally, enable hjem impure for your desired user
-
-```nix
-{
-    hjem.users.${myUserName}.impure.enable = true;
+        xdg.config.files = let 
+            dots = config.hjem.users.${myUserName}.impure.dotsDir;              # this is a string with /nix/store path to the dotsFolder
+        in {
+            "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf"      # all links that youd like to use with hjem-impure must use `dots`
+        };
+    };
 }
 ```
 
 ### Usage
-simple run the blow to create the relative symlinks overwriting existing ones.
+simply run the below to create the relative symlinks overwriting existing ones.
 ```
 hjem-impure
 ``` 
