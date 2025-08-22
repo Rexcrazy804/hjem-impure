@@ -13,13 +13,13 @@ that effectively overwrites the `/nix/store/...` link hjem creates
 into relative links to your nixos configuration
 
 Suppose you have the lines `xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf`
-in your `/home/myuser/user.nix`.
+in your `/home/myuser/nixos/user.nix`.
 
 Hjem would create a symlink at `.config/hypr/hypland.conf` to `/nix/store/98p1jnnhh146kkllrj9jfd7if5hbmqws-hyprland.conf`,
 which is a path in the non-readable nix store.
 
 When you run the `hjem-impure` script, the symlink at `.config/hypr/hyplrand.conf`
-is replaced with a symlink to `/home/myuser/mydots/hyplrand/hyprland.conf`.
+is replaced with a symlink to `/home/myuser/nixos/mydots/hyplrand/hyprland.conf`.
 
 Pretty simple right? Its absurdly effective too!
 
