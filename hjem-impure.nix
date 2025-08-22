@@ -40,6 +40,7 @@
 in {
   options.impure = {
     enable = mkEnableOption "hjem impure planting script";
+
     dotsDir = mkOption {
       type = str;
       description = "directory containing your dots";
@@ -49,6 +50,7 @@ in {
       description = "string path of dotsDir";
       example = "/home/bobrose/myNixosConfig/";
     };
+
     linkFiles = mkOption {
       # TODO: should this be relaxed?
       type = listOf (enum [
@@ -71,6 +73,7 @@ in {
       '';
       apply = x: foldl (acc: curr: acc ++ (attrValues curr)) [] x;
     };
+
     # debugging only
     script = mkOption {
       readOnly = true;
