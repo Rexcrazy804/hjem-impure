@@ -8,6 +8,9 @@
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
   inherit (lib) assertMsg pathExists;
   inherit (lib.types) str;
+
+  cfg = config.impure;
+
   planter = pkgs.writeScriptBin "hjem-impure" ''
     set -euo pipefail
     function symlink() {
@@ -22,12 +25,12 @@
     ${symlinkFiles}
   '';
 
-  symlinkFiles = pipe config.impure.linkFiles [
-    (filter (x: x ? source && hasPrefix "${config.impure.dotsDir}" "${x.source}"))
+  symlinkFiles = pipe cfg.linkFiles [
+    (filter (x: x ? source && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid.
     # Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
-    (map (x: "symlink ${config.impure.dotsDirImpure}${removePrefix "${config.impure.dotsDir}" "${x.source}"} ${x.target}"))
+    (map (x: "symlink ${cfg.dotsDirImpure}${removePrefix "${cfg.dotsDir}" "${x.source}"} ${x.target}"))
     (concatStringsSep "\n")
   ];
 in {
@@ -54,10 +57,10 @@ in {
       default = planter;
     };
   };
-  config = mkIf config.impure.enable {
+  config = mkIf cfg.enable {
     assertions = [
       {
-        assertion = config.impure.linkFiles != [];
+        assertion = cfg.linkFiles != [];
         message = ''
           hjem impure only supports `hjem.users.${config.user}.xdg.config.files` presently.
           Please relocate your `files.".config/myprogram/*"` into `xdg.config.files."myprogram/*"`
