@@ -26,7 +26,7 @@
     (filter (x: x ? source && hasPrefix "${config.impure.dotsDir}" "${x.source}"))
     # ensures that paths are valid.
     # Throws an error if they aren't
-    (filter (x: assert (assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"); true))
+    (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
     (map (x: "symlink ${config.impure.dotsDirImpure}${removePrefix "${config.impure.dotsDir}" "${x.source}"} ${x.target}"))
     (concatStringsSep "\n")
   ];
