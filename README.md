@@ -4,6 +4,8 @@ to overwrite `/nix/store/...` links created by hjem
 with relative links to your nixos configuration on demand.
 No more waiting for your configuration to build to test changes!
 
+https://github.com/user-attachments/assets/3648a751-77c8-4336-b60e-19969ec27d98
+
 ### What does it do exactly?
 hjem-impure reads your `hjem.users.${myUserName}.xdg.config.files` attrset 
 and filters through it to identify config files that are simply links
