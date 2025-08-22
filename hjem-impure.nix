@@ -4,7 +4,9 @@
   config,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf map attrValues match concatStringsSep mkOption;
+  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional;
+  inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
+  inherit (lib.types) path str;
   planter = pkgs.writeScriptBin "hjem-impure" ''
     set -euo pipefail
     function symlink() {
@@ -16,17 +18,27 @@
         ln -sfv "$1" "$2"
     }
 
-    ${concatStringsSep "\n" symlinkFiles}
+    ${symlinkFiles}
   '';
 
-  symlinkFiles = map (x:
-    if x ? source && (match "/home.*" (builtins.toString x.source)) != null
-    then "symlink ${builtins.toString x.source} ${x.target}"
-    else "")
-  config.impure.linkFiles;
+  symlinkFiles = pipe config.impure.linkFiles [
+    (filter (x: x ? source && hasPrefix "${config.impure.dotsDir}" "${x.source}"))
+    (map (x: "symlink ${config.impure.dotsDirImpure}${removePrefix "${config.impure.dotsDir}" "${x.source}"} ${x.target}"))
+    (concatStringsSep "\n")
+  ];
 in {
   options.impure = {
     enable = mkEnableOption "hjem impure planting script";
+    dotsDir = mkOption {
+      type = path;
+      description = "directory containing your dots";
+      apply = x: "${x}";
+    };
+    dotsDirImpure = mkOption {
+      type = str;
+      description = "string path of dotsDir";
+      example = "/home/bobrose/myNixosConfig/";
+    };
     linkFiles = mkOption {
       readOnly = true;
       default = config.xdg.config.files;
@@ -39,11 +51,12 @@ in {
       {
         assertion = config.impure.linkFiles != [];
         message = ''
-          hjem impure only supports `hjem.users.${config.user}.xdg.config.files` presently
-          please relocate your `files.".config/myprogram/*"` into `xdg.config.files."myprogram/*"`
+          hjem impure only supports `hjem.users.${config.user}.xdg.config.files` presently.
+          Please relocate your `files.".config/myprogram/*"` into `xdg.config.files."myprogram/*"`
         '';
       }
     ];
+    warnings = optional (symlinkFiles == "") "hjem-impure detected zero files to symlink";
     packages = [planter];
   };
 }
