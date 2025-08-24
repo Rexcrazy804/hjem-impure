@@ -19,7 +19,7 @@
                 echo "$2 exists and is not a symlink. Ignoring it." >&2
                 return 1
             fi
-            mkdir -p $(dirname $2)
+            mkdir -p "$(dirname "$2")"
             ln -sfv "$1" "$2"
         }
 
