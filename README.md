@@ -1,8 +1,9 @@
 # Hjem impure
-A simple hjem module that provides a script
-to overwrite `/nix/store/...` links created by hjem
-with relative links to your nixos configuration or a mutable copy on demand.
-No more waiting for your configuration to build to test changes!
+Hjem impure provides a script which:
+- Replaces every hjem symlink with writable normal files and directories
+- Links particular symlinks back into your nixos configuration
+
+No more waiting for nixos-rebuilds to modify your dots. Ever.
 
 https://github.com/user-attachments/assets/3648a751-77c8-4336-b60e-19969ec27d98
 
@@ -14,7 +15,7 @@ and `hjem.users.${myUserName}.files` attrsets.
 Then, it populates the `hjem-impure` script to perform the following:
 1. If the file/dir can be a symlink to your nixos configuration, the hjem symlinks
 are replaced with symlinks to the respective file/dir in your nixos configuration
-2. Otherwise if its NOT a directory, the hjem symlink is replaced with a mutable copy of the file it points to
+2. Otherwise, the hjem symlink is replaced with a mutable copy of the file it points to
 
 Suppose you have the lines `xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf`
 in your `/home/myuser/nixos/user.nix`.
@@ -23,9 +24,15 @@ Hjem would create a symlink at `.config/hypr/hypland.conf` to `/nix/store/98p1jn
 which is a path in the non-readable nix store.
 
 When you run the `hjem-impure` script, the symlink at `.config/hypr/hyplrand.conf`
-is replaced with a symlink to `/home/myuser/nixos/mydots/hyplrand/hyprland.conf`.
+is replaced with a normal, modifiable directory.
 
 Pretty simple right? Its absurdly effective too!
+
+Alternatively, Suppose you had the lines `xdg.config.files."hypr/hyprland.conf" = mydots + "/hyprland/hyprland.conf"`
+in your `/home/myuser/nixos/user.nix`; mydots being a string: `"${./mydots}"`
+
+With the right configuration, hjem-impure will instead replace 
+the symlinks to the nix store with symlinks to your nixos configuration
 
 ### Installation
 First, add hjem-impure to your flake inputs
@@ -65,7 +72,7 @@ and enable hjem impure for your desired user
                 $mycoolcolor = rgba(d392fcff)
             '';
             "background".source = gnomebgs + "pills-l.jxl";                     # this applies to .source'd files as well
-            "backgrounds".source = gnomebgs                                     # HOWEVER, presently, folders CANNOT be replaced with a mutable copy
+            "backgrounds".source = gnomebgs                                     # AND DIRECTORIES!!!
         };
 
         # or alternatively
