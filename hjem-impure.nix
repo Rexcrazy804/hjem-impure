@@ -6,7 +6,7 @@
 }: let
   inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional literalExpression;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg pathExists foldl;
+  inherit (lib) assertMsg pathExists foldl pathIsDirectory;
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
@@ -14,29 +14,44 @@
   planter = pkgs.writeShellApplication {
     name = "hjem-impure";
     text = ''
-      function symlink() {
-          if [[ -e "$2" && ! -L "$2" ]] ; then
-              echo "$2 exists and is not a symlink. Ignoring it." >&2
-              return 1
-          fi
-          mkdir -p $(dirname $2)
-          ln -sfv "$1" "$2"
-      }
+        function symlink() {
+            if [[ -e "$2" && ! -L "$2" ]] ; then
+                echo "$2 exists and is not a symlink. Ignoring it." >&2
+                return 1
+            fi
+            mkdir -p $(dirname $2)
+            ln -sfv "$1" "$2"
+        }
 
+      # files symlinked to ${cfg.dotsDirImpure}
       ${
         if symlinkFiles == ""
         then "echo 'No files to symlink'"
         else symlinkFiles
       }
+
+      alias sed="${pkgs.gnused}/bin/sed"
+      # files made mutable in place
+      ${
+        if replaceFiles == ""
+        then "echo 'No files to replace'"
+        else replaceFiles
+      }
     '';
   };
 
   symlinkFiles = pipe cfg.linkFiles [
-    (filter (x: x ? source && hasPrefix "${cfg.dotsDir}" "${x.source}"))
+    (filter (x: hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid.
     # Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
     (map (x: "symlink ${cfg.dotsDirImpure}${removePrefix "${cfg.dotsDir}" "${x.source}"} ${x.target}"))
+    (concatStringsSep "\n")
+  ];
+
+  replaceFiles = pipe cfg.linkFiles [
+    (filter (x: ! (hasPrefix "${cfg.dotsDir}" "${x.source}" || pathIsDirectory x.source)))
+    (map (x: "sed -i '' ${x.target} && chmod u+w ${x.target} && echo 'made ${x.target} mutable'"))
     (concatStringsSep "\n")
   ];
 in {
