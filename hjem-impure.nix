@@ -4,7 +4,7 @@
   config,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional;
+  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional literalExpression;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
   inherit (lib) assertMsg pathExists foldl;
   inherit (lib.types) str listOf enum;
@@ -66,8 +66,14 @@ in {
         config.xdg.config.files
         config.files
       ];
+      defaultText = literalExpression ''
+        [
+          {option}`config.xdg.config.files`
+          {option}`config.files`
+        ];
+      '';
       description = "list of attrbute sets to parse files from";
-      example = ''
+      example = literalExpression ''
         [
           hjem.users.''${userName}.xdg.config.files
           hjem.users.''${userName}.xdg.data.files
