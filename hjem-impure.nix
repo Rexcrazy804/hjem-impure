@@ -25,8 +25,18 @@
 
       function replace() {
         # for more info: https://stackoverflow.com/a/12673543
-        ${pkgs.gnused}/bin/sed -i "" "$1"
-        chmod u+w "$1"
+        if [[ -d "$1" ]] ; then
+          if [[ ! -L "$1" ]] ; then
+            echo "$1 exists and is not a symlink. Ignoring it." >&2
+            return 1
+          fi
+          STORE_PATH=$(realpath "$1")
+          rm "$1"
+          cp -rL --no-preserve=all "$STORE_PATH" "$1"
+        else
+          ${pkgs.gnused}/bin/sed -i "" "$1"
+          chmod u+w "$1"
+        fi
         echo "made mutable: $1"
       }
 
@@ -58,7 +68,7 @@
   ];
 
   replaceFiles = pipe cfg.linkFiles [
-    (filter (x: ! (hasPrefix "${cfg.dotsDir}" "${x.source}" || pathIsDirectory x.source)))
+    (filter (x: ! hasPrefix "${cfg.dotsDir}" "${x.source}"))
     (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
