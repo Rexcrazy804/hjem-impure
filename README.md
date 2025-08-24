@@ -1,7 +1,7 @@
 # Hjem impure
 A simple hjem module that provides a script
 to overwrite `/nix/store/...` links created by hjem
-with relative links to your nixos configuration on demand.
+with relative links to your nixos configuration or a mutable copy on demand.
 No more waiting for your configuration to build to test changes!
 
 https://github.com/user-attachments/assets/3648a751-77c8-4336-b60e-19969ec27d98
@@ -56,8 +56,14 @@ and enable hjem impure for your desired user
 
         xdg.config.files = let
             dots = config.hjem.users.${myUserName}.impure.dotsDir;
+            gnomebgs = "${pkgs.gnome-backgrounds}/share/backgrounds/gnome/";
         in {
-            "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";     # all links that youd like to use with hjem-impure must use `dots`
+            "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";     # all links that you'd like to link with hjem-impure must use `dots`
+            "hypr/colors.conf".text = ''                                        # files that do not use the `dots`, will be replaced with a mutable copy
+                $mycoolcolor = rgba(d392fcff)
+            '';
+            "background".source = gnomebgs + "pills-l.jxl";                     # this applies to .source'd files as well
+            "backgrounds".source = gnomebgs                                     # HOWEVER, presently, folders CANNOT be replaced with a mutable copy
         };
 
         # or alternatively
