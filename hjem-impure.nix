@@ -4,30 +4,32 @@
   config,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional;
+  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional literalExpression;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
   inherit (lib) assertMsg pathExists foldl;
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
 
-  planter = pkgs.writeScriptBin "hjem-impure" ''
-    set -euo pipefail
-    function symlink() {
-        if [[ -e "$2" && ! -L "$2" ]] ; then
-            echo "$2 exists and is not a symlink. Ignoring it." >&2
-            return 1
-        fi
-        mkdir -p $(dirname $2)
-        ln -sfv "$1" "$2"
-    }
+  planter = pkgs.writeShellApplication {
+    name = "hjem-impure";
+    text = ''
+      function symlink() {
+          if [[ -e "$2" && ! -L "$2" ]] ; then
+              echo "$2 exists and is not a symlink. Ignoring it." >&2
+              return 1
+          fi
+          mkdir -p $(dirname $2)
+          ln -sfv "$1" "$2"
+      }
 
-    ${
-      if symlinkFiles == ""
-      then "echo 'No files to symlink'"
-      else symlinkFiles
-    }
-  '';
+      ${
+        if symlinkFiles == ""
+        then "echo 'No files to symlink'"
+        else symlinkFiles
+      }
+    '';
+  };
 
   symlinkFiles = pipe cfg.linkFiles [
     (filter (x: x ? source && hasPrefix "${cfg.dotsDir}" "${x.source}"))
@@ -48,7 +50,7 @@ in {
     dotsDirImpure = mkOption {
       type = str;
       description = "string path of dotsDir";
-      example = "/home/bobrose/myNixosConfig/";
+      example = "{file}`/home/bobrose/myNixosConfig/`";
     };
 
     linkFiles = mkOption {
@@ -64,8 +66,14 @@ in {
         config.xdg.config.files
         config.files
       ];
+      defaultText = literalExpression ''
+        [
+          {option}`config.xdg.config.files`
+          {option}`config.files`
+        ];
+      '';
       description = "list of attrbute sets to parse files from";
-      example = ''
+      example = literalExpression ''
         [
           hjem.users.''${userName}.xdg.config.files
           hjem.users.''${userName}.xdg.data.files
