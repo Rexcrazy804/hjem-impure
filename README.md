@@ -5,7 +5,7 @@ Hjem impure provides a script which:
 
 No more waiting for nixos-rebuilds to modify your dots. Ever.
 
-https://github.com/user-attachments/assets/3648a751-77c8-4336-b60e-19969ec27d98
+https://github.com/user-attachments/assets/974e4f9e-0156-4ec1-b7ca-fcf9e4eb7e5b
 
 ### What does it do exactly?
 First, hjem-impure module reads your `hjem.users.${myUserName}.xdg.config.files`
