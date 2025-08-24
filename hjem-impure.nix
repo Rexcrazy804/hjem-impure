@@ -11,23 +11,25 @@
 
   cfg = config.impure;
 
-  planter = pkgs.writeScriptBin "hjem-impure" ''
-    set -euo pipefail
-    function symlink() {
-        if [[ -e "$2" && ! -L "$2" ]] ; then
-            echo "$2 exists and is not a symlink. Ignoring it." >&2
-            return 1
-        fi
-        mkdir -p $(dirname $2)
-        ln -sfv "$1" "$2"
-    }
+  planter = pkgs.writeShellApplication {
+    name = "hjem-impure";
+    text = ''
+      function symlink() {
+          if [[ -e "$2" && ! -L "$2" ]] ; then
+              echo "$2 exists and is not a symlink. Ignoring it." >&2
+              return 1
+          fi
+          mkdir -p $(dirname $2)
+          ln -sfv "$1" "$2"
+      }
 
-    ${
-      if symlinkFiles == ""
-      then "echo 'No files to symlink'"
-      else symlinkFiles
-    }
-  '';
+      ${
+        if symlinkFiles == ""
+        then "echo 'No files to symlink'"
+        else symlinkFiles
+      }
+    '';
+  };
 
   symlinkFiles = pipe cfg.linkFiles [
     (filter (x: x ? source && hasPrefix "${cfg.dotsDir}" "${x.source}"))
