@@ -24,6 +24,7 @@
       }
 
       function replace() {
+        # for more info: https://stackoverflow.com/a/12673543
         ${pkgs.gnused}/bin/sed -i "" "$1"
         chmod u+w "$1"
         echo "made mutable: $1"
