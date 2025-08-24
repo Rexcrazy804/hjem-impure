@@ -23,6 +23,12 @@
           ln -sfv "$1" "$2"
       }
 
+      function replace() {
+        ${pkgs.gnused}/bin/sed -i "" "$1"
+        chmod u+w "$1"
+        echo "made mutable: $1"
+      }
+
       # files symlinked to ${cfg.dotsDirImpure}
       ${
         if symlinkFiles == ""
@@ -30,7 +36,8 @@
         else symlinkFiles
       }
 
-      alias sed="${pkgs.gnused}/bin/sed"
+      echo ""
+
       # files made mutable in place
       ${
         if replaceFiles == ""
@@ -51,7 +58,7 @@
 
   replaceFiles = pipe cfg.linkFiles [
     (filter (x: ! (hasPrefix "${cfg.dotsDir}" "${x.source}" || pathIsDirectory x.source)))
-    (map (x: "sed -i '' ${x.target} && chmod u+w ${x.target} && echo 'made ${x.target} mutable'"))
+    (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
 in {
