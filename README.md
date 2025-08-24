@@ -13,7 +13,7 @@ and `hjem.users.${myUserName}.files` attrsets.
 
 Then, it populates the `hjem-impure` script to perform the following:
 1. If the file/dir can be a symlink to your nixos configuration, the hjem symlinks
-are replaced with symlinks to the respective file at your nixos configuration
+are replaced with symlinks to the respective file/dir in your nixos configuration
 2. Otherwise if its NOT a directory, the hjem symlink is replaced with a mutable copy of the file it points to
 
 Suppose you have the lines `xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf`
