@@ -50,7 +50,7 @@ in {
     dotsDirImpure = mkOption {
       type = str;
       description = "string path of dotsDir";
-      example = "/home/bobrose/myNixosConfig/";
+      example = "{file}`/home/bobrose/myNixosConfig/`";
     };
 
     linkFiles = mkOption {
