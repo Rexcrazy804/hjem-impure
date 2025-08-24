@@ -7,12 +7,14 @@ No more waiting for your configuration to build to test changes!
 https://github.com/user-attachments/assets/3648a751-77c8-4336-b60e-19969ec27d98
 
 ### What does it do exactly?
-hjem-impure reads your `hjem.users.${myUserName}.xdg.config.files` attrset
-and filters through it to identify config files that are simply links
-to your nixos configuration directory.
-With this information, a script `hjem-impure` is created
-that effectively overwrites the `/nix/store/...` link hjem creates
-into relative links to your nixos configuration
+First, hjem-impure module reads your `hjem.users.${myUserName}.xdg.config.files`
+and `hjem.users.${myUserName}.files` attrsets.
+(this can be modified with `impure.linkFiles` option)
+
+Then, it populates the `hjem-impure` script to perform the following:
+1. If the file/dir can be a symlink to your nixos configuration, the hjem symlinks
+are replaced with symlinks to the respective file at your nixos configuration
+2. Otherwise if its NOT a directory, the hjem symlink is replaced with a mutable copy of the file it points to
 
 Suppose you have the lines `xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf`
 in your `/home/myuser/nixos/user.nix`.
