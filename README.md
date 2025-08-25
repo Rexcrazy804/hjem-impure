@@ -28,6 +28,9 @@ and enable hjem impure for your desired user
     hjem.users.${myUserName} = {
         impure = {
             enable = true;                                                      # enable hjem-impure
+
+            # you can skip setting the below if you don't require
+            # rewriting hjem symlinks with symlinks to your nixos configuration
             dotsDir = "${./myDotsFolder}";                                      # pure path to dotsFolder AS STRING
             dotsDirImpure = "/home/myuser/nixos/myDotsFolder";                  # impure absolute path to dots folder
         };
@@ -37,14 +40,14 @@ and enable hjem impure for your desired user
         # see `impure.linkFiles` for altering this behavior
 
         xdg.config.files = let
-            dots = config.hjem.users.${myUserName}.impure.dotsDir;
-            gnomebgs = "${pkgs.gnome-backgrounds}/share/backgrounds/gnome/";
+            dots = config.hjem.users.${myUserName}.impure.dotsDir;              # only required for rewriting links to nixos configuration feature
+            gnomebgs = "${pkgs.gnome-backgrounds}/share/backgrounds/gnome";
         in {
-            "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";     # all links that you'd like to link with hjem-impure must use `dots`
+            "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";     # use `dots` for overwriting with symlinks to nixos configuration
             "hypr/colors.conf".text = ''                                        # files that do not use the `dots`, will be replaced with a mutable copy
                 $mycoolcolor = rgba(d392fcff)
             '';
-            "background".source = gnomebgs + "pills-l.jxl";                     # this applies to .source'd files as well
+            "background".source = gnomebgs + "/pills-l.jxl";                    # this applies to .source'd files as well
             "backgrounds".source = gnomebgs                                     # AND DIRECTORIES!!!
         };
 
