@@ -6,7 +6,7 @@
 }: let
   inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional literalExpression;
   inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg pathExists foldl pathIsDirectory;
+  inherit (lib) assertMsg pathExists foldl;
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
@@ -121,6 +121,7 @@ in {
       default = planter;
     };
   };
+
   config = mkIf cfg.enable {
     warnings = optional (symlinkFiles == "") "hjem-impure detected zero files to symlink";
     packages = [planter];
