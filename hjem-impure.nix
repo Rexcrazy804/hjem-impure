@@ -42,7 +42,7 @@
 
       # files symlinked to ${cfg.dotsDirImpure}
       ${
-        if symlinkFiles == ""
+        if cfg.dotsDir == "" || symlinkFiles == ""
         then "echo 'No files to symlink'"
         else symlinkFiles
       }
@@ -59,7 +59,7 @@
   };
 
   symlinkFiles = pipe cfg.linkFiles [
-    (filter (x: hasPrefix "${cfg.dotsDir}" "${x.source}"))
+    (filter (x: cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid.
     # Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
@@ -68,7 +68,7 @@
   ];
 
   replaceFiles = pipe cfg.linkFiles [
-    (filter (x: ! hasPrefix "${cfg.dotsDir}" "${x.source}"))
+    (filter (x: ! (cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}")))
     (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
@@ -78,10 +78,12 @@ in {
 
     dotsDir = mkOption {
       type = str;
+      default = "";
       description = "directory containing your dots";
     };
     dotsDirImpure = mkOption {
       type = str;
+      default = "";
       description = "string path of dotsDir";
       example = "{file}`/home/bobrose/myNixosConfig/`";
     };
@@ -123,7 +125,14 @@ in {
   };
 
   config = mkIf cfg.enable {
-    warnings = optional (symlinkFiles == "") "hjem-impure detected zero files to symlink";
+    assertions = [
+      {
+        assertion = cfg.dotsDir != "" -> cfg.dotsDirImpure != "";
+        message = "hjem-impure: `dotsDir` set without setting `dotsDirImpure`";
+      }
+    ];
+
+    warnings = optional (cfg.dotsDir != "" && symlinkFiles == "") "hjem-impure detected zero files to symlink";
     packages = [planter];
   };
 }
