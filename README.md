@@ -7,33 +7,6 @@ No more waiting for nixos-rebuilds to modify your dots. Ever.
 
 https://github.com/user-attachments/assets/974e4f9e-0156-4ec1-b7ca-fcf9e4eb7e5b
 
-### What does it do exactly?
-First, hjem-impure module reads your `hjem.users.${myUserName}.xdg.config.files`
-and `hjem.users.${myUserName}.files` attrsets.
-(this can be modified with `impure.linkFiles` option)
-
-Then, it populates the `hjem-impure` script to perform the following:
-1. If the file/dir can be a symlink to your nixos configuration, the hjem symlinks
-are replaced with symlinks to the respective file/dir in your nixos configuration
-2. Otherwise, the hjem symlink is replaced with a mutable copy of the file it points to
-
-Suppose you have the lines `xdg.config.files."hypr/hyprland.conf" = ./mydots/hyprland/hyprland.conf`
-in your `/home/myuser/nixos/user.nix`.
-
-Hjem would create a symlink at `.config/hypr/hypland.conf` to `/nix/store/98p1jnnhh146kkllrj9jfd7if5hbmqws-hyprland.conf`,
-which is a path in the non-readable nix store.
-
-When you run the `hjem-impure` script, the symlink at `.config/hypr/hyplrand.conf`
-is replaced with a normal, modifiable directory.
-
-Pretty simple right? Its absurdly effective too!
-
-Alternatively, Suppose you had the lines `xdg.config.files."hypr/hyprland.conf" = mydots + "/hyprland/hyprland.conf"`
-in your `/home/myuser/nixos/user.nix`; mydots being a string: `"${./mydots}"`
-
-With the right configuration, hjem-impure will instead replace 
-the symlinks to the nix store with symlinks to your nixos configuration
-
 ### Installation
 First, add hjem-impure to your flake inputs
 ```nix
@@ -98,6 +71,12 @@ Alternatively you can also re-create hjem's /nix/store links using
 ```bash
 systemd-tmpfiles --user --create
 ```
+
+### How does it do it exactly?
+hjem impure nix module simply reads information hjem uses to plant files in place. 
+This information is converted into a shell script
+that either replaces the symlinks with symlinks to the nixos configuration,
+or makes a writable copy of the file or directory.
 
 ### Acknowledgements
 - [hjem-rum](https://github.com/snugnug/hjem-rum) my reference for creating this module
