@@ -64,7 +64,8 @@ and enable hjem impure for your desired user
 ```
 
 ### Usage
-simply run the below to create the relative symlinks overwriting existing ones.
+simply run the below to make your hjem links modifiable
+and if configured, overwrite with symlinks to your nixos configuration.
 ```
 hjem-impure
 ```
