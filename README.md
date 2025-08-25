@@ -70,8 +70,8 @@ and if configured, overwrite with symlinks to your nixos configuration.
 hjem-impure
 ```
 
-The next nixos-rebuild will overwrite hjem-impure's relative links.
-Alternatively you can also re-create hjem's /nix/store links using
+The next nixos-rebuild will overwrite hjem-impure's changes.
+Alternatively you can also re-create hjem's `/nix/store` links using
 ```bash
 systemd-tmpfiles --user --create
 ```
