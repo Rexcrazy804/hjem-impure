@@ -73,7 +73,7 @@ systemd-tmpfiles --user --create
 ```
 
 ### How does it do it exactly?
-hjem impure nix module simply reads information hjem uses to plant files in place. 
+hjem impure module simply reads information hjem uses to plant files in place. 
 This information is converted into a shell script
 that either replaces the symlinks with symlinks to the nixos configuration,
 or makes a writable copy of the file or directory.
