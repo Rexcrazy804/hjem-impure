@@ -63,6 +63,8 @@ and enable hjem impure for your desired user
 }
 ```
 
+for a fleshed out configuration and flake example see [zaphkieltest](https://github.com/Rexcrazy804/zaphkieltest/blob/master/configuration.nix#L31C1-L50)
+
 ### Usage
 simply run the below to make your hjem links modifiable
 and if configured, overwrite with symlinks to your nixos configuration.
