@@ -33,7 +33,7 @@ and enable hjem impure for your desired user
 And that's it, after you rebuild your configuraiton
 you should have the `hjem-impure` executable.
 
-#### Advanced (relink to nixos configuration)
+### Advanced Installation (relink to nixos configuration)
 Hjem impure offers the ability to optionally relink certain symlinks created by hjem
 back into your nixos configuration,
 granted that there exists a common dotsDir from which each file/dir is `source`'d
