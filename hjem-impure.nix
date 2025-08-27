@@ -4,12 +4,19 @@
   config,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional literalExpression;
-  inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg pathExists foldl;
+  inherit (lib) mkEnableOption mkIf mkOption literalExpression mkRenamedOptionModule;
+  inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep;
+  inherit (lib) assertMsg optional pathExists foldl attrValues;
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
+  hjemFileAttrList = [
+    config.files
+    config.xdg.config.files
+    config.xdg.data.files
+    config.xdg.state.files
+    config.xdg.cache.files
+  ];
 
   planter = pkgs.writeShellApplication {
     name = "hjem-impure";
@@ -58,7 +65,7 @@
     '';
   };
 
-  symlinkFiles = pipe cfg.linkFiles [
+  symlinkFiles = pipe cfg.parseAttrs [
     (filter (x: cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid. Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
@@ -66,12 +73,16 @@
     (concatStringsSep "\n")
   ];
 
-  replaceFiles = pipe cfg.linkFiles [
+  replaceFiles = pipe cfg.parseAttrs [
     (filter (x: ! (cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}")))
     (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
 in {
+  imports = [
+    (mkRenamedOptionModule ["impure" "linkFiles"] ["impure" "parseAttrs"])
+  ];
+
   options.impure = {
     enable = mkEnableOption "hjem impure planting script";
 
@@ -87,23 +98,16 @@ in {
       example = "{file}`/home/bobrose/myNixosConfig/`";
     };
 
-    linkFiles = mkOption {
-      # TODO: should this be relaxed?
-      type = listOf (enum [
-        config.files
-        config.xdg.config.files
-        config.xdg.data.files
-        config.xdg.state.files
-        config.xdg.cache.files
-      ]);
-      default = [
-        config.xdg.config.files
-        config.files
-      ];
+    parseAttrs = mkOption {
+      type = listOf (enum hjemFileAttrList);
+      default = hjemFileAttrList;
       defaultText = literalExpression ''
         [
-          {option}`config.xdg.config.files`
           {option}`config.files`
+          {option}`config.xdg.config.files`
+          {option}`config.xdg.data.files`
+          {option}`config.xdg.state.files`
+          {option}`config.xdg.cache.files`
         ];
       '';
       description = "list of attrbute sets to parse files from";
