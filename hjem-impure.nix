@@ -4,9 +4,9 @@
   config,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf mkOption pipe attrValues optional literalExpression;
-  inherit (lib) map filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg pathExists foldl;
+  inherit (lib) mkEnableOption mkIf mkOption literalExpression mkRenamedOptionModule;
+  inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep;
+  inherit (lib) assertMsg optional pathExists foldl attrValues;
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
@@ -65,7 +65,7 @@
     '';
   };
 
-  symlinkFiles = pipe cfg.linkFiles [
+  symlinkFiles = pipe cfg.parseAttrs [
     (filter (x: cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid. Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
@@ -73,12 +73,16 @@
     (concatStringsSep "\n")
   ];
 
-  replaceFiles = pipe cfg.linkFiles [
+  replaceFiles = pipe cfg.parseAttrs [
     (filter (x: ! (cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}")))
     (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
 in {
+  imports = [
+    (mkRenamedOptionModule ["impure" "linkFiles"] ["impure" "parseAttrs"])
+  ];
+
   options.impure = {
     enable = mkEnableOption "hjem impure planting script";
 
@@ -94,7 +98,7 @@ in {
       example = "{file}`/home/bobrose/myNixosConfig/`";
     };
 
-    linkFiles = mkOption {
+    parseAttrs = mkOption {
       type = listOf (enum hjemFileAttrList);
       default = hjemFileAttrList;
       defaultText = literalExpression ''
