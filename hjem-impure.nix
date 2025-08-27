@@ -10,6 +10,13 @@
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
+  hjemFileAttrList = [
+    config.files
+    config.xdg.config.files
+    config.xdg.data.files
+    config.xdg.state.files
+    config.xdg.cache.files
+  ];
 
   planter = pkgs.writeShellApplication {
     name = "hjem-impure";
@@ -88,22 +95,15 @@ in {
     };
 
     linkFiles = mkOption {
-      # TODO: should this be relaxed?
-      type = listOf (enum [
-        config.files
-        config.xdg.config.files
-        config.xdg.data.files
-        config.xdg.state.files
-        config.xdg.cache.files
-      ]);
-      default = [
-        config.xdg.config.files
-        config.files
-      ];
+      type = listOf (enum hjemFileAttrList);
+      default = hjemFileAttrList;
       defaultText = literalExpression ''
         [
-          {option}`config.xdg.config.files`
           {option}`config.files`
+          {option}`config.xdg.config.files`
+          {option}`config.xdg.data.files`
+          {option}`config.xdg.state.files`
+          {option}`config.xdg.cache.files`
         ];
       '';
       description = "list of attrbute sets to parse files from";
