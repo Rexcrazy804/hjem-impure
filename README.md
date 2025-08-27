@@ -48,8 +48,8 @@ granted that there exists a common dotsDir from which each file/dir is `source`'
     };
 
     # NOTE
-    # by default hjem-impure parses `files` and `xdg.config.files`
-    # see `impure.linkFiles` for altering this behavior
+    # by default hjem-impure parses your `files` and `xdg.*.files`
+    # see `impure.parseAttrs` for altering this behavior
 
     xdg.config.files = let
       dots = config.hjem.users.${myUserName}.impure.dotsDir;              # aforementioned commond dots
