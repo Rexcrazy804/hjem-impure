@@ -44,10 +44,10 @@
           ${pkgs.gnused}/bin/sed -i "" "$1"
           chmod u+w "$1"
         fi
-        echo "made mutable: $1"
+        echo "$1"
       }
 
-      # files symlinked to ${cfg.dotsDirImpure}
+      echo "Redirecting symlinks to dotsDirImpure"
       ${
         if cfg.dotsDir == "" || symlinkFiles == ""
         then "echo 'No files to symlink'"
@@ -55,8 +55,7 @@
       }
 
       echo ""
-
-      # files made mutable in place
+      echo "Replacing symlinks with mutable copies"
       ${
         if replaceFiles == ""
         then "echo 'No files to replace'"
