@@ -86,6 +86,11 @@ Alternatively you can also re-create hjem's `/nix/store` links using
 systemd-tmpfiles --user --create
 ```
 
+or if you use smfh as the linker
+```bash
+systemctl start hjem-activate@userName.service
+```
+
 ### How does it work exactly?
 hjem impure module simply reads information hjem uses to plant files in place. 
 This information is converted into a shell script
