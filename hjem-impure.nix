@@ -6,7 +6,7 @@
 }: let
   inherit (lib) mkEnableOption mkIf mkOption literalExpression mkRenamedOptionModule;
   inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg optional pathExists foldl attrValues;
+  inherit (lib) assertMsg optional optionalString pathExists foldl attrValues;
   inherit (lib.types) str listOf enum;
 
   cfg = config.impure;
@@ -52,21 +52,21 @@
         echo "$1"
       }
 
-      echo "Redirecting symlinks to dotsDirImpure"
-      ${
-        if cfg.dotsDir == "" || symlinkFiles == ""
-        then "echo 'No files to symlink'"
-        else symlinkFiles
-      }
-
-      echo ""
       echo "Replacing symlinks with mutable copies"
       ${
         if replaceFiles == ""
         then "echo 'No files to replace'"
         else replaceFiles
       }
-    '';
+    '' + (optionalString (cfg.dotsDir != "") ''
+      echo ""
+      echo "Redirecting symlinks to dotsDirImpure"
+      ${
+        if symlinkFiles == ""
+        then "echo 'No files to symlink'"
+        else symlinkFiles
+      }
+    '') ;
   };
 
   symlinkFiles = pipe cfg.parseAttrs [
