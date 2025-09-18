@@ -20,53 +20,55 @@
 
   planter = pkgs.writeShellApplication {
     name = "hjem-impure";
-    text = ''
-      function symlink() {
-        if [[ -e "$2" && ! -L "$2" ]] ; then
-          echo "$2 exists and is not a symlink. Ignoring it." >&2
-          return 1
-        fi
-        # prevents ln failing for symlinks that are directories
-        if [[ -d "$2" ]] ; then
-          rm "$2"
-        fi
-
-        mkdir -p "$(dirname "$2")"
-        ln -sfv "$1" "$2"
-      }
-
-      function replace() {
-        if [[ -d "$1" ]] ; then
-          if [[ ! -L "$1" ]] ; then
-            echo "$1 exists and is not a symlink. Ignoring it." >&2
+    text =
+      ''
+        function symlink() {
+          if [[ -e "$2" && ! -L "$2" ]] ; then
+            echo "$2 exists and is not a symlink. Ignoring it." >&2
             return 1
           fi
-          STORE_PATH=$(realpath "$1")
-          rm "$1"
-          cp -rL --no-preserve=all "$STORE_PATH" "$1"
-        else
-          # for more info: https://stackoverflow.com/a/12673543
-          ${pkgs.gnused}/bin/sed -i "" "$1"
-          chmod u+w "$1"
-        fi
-        echo "$1"
-      }
+          # prevents ln failing for symlinks that are directories
+          if [[ -d "$2" ]] ; then
+            rm "$2"
+          fi
 
-      echo "Replacing symlinks with mutable copies"
-      ${
-        if replaceFiles == ""
-        then "echo 'No files to replace'"
-        else replaceFiles
-      }
-    '' + (optionalString (cfg.dotsDir != "") ''
-      echo ""
-      echo "Redirecting symlinks to dotsDirImpure"
-      ${
-        if symlinkFiles == ""
-        then "echo 'No files to symlink'"
-        else symlinkFiles
-      }
-    '') ;
+          mkdir -p "$(dirname "$2")"
+          ln -sfv "$1" "$2"
+        }
+
+        function replace() {
+          if [[ -d "$1" ]] ; then
+            if [[ ! -L "$1" ]] ; then
+              echo "$1 exists and is not a symlink. Ignoring it." >&2
+              return 1
+            fi
+            STORE_PATH=$(realpath "$1")
+            rm "$1"
+            cp -rL --no-preserve=all "$STORE_PATH" "$1"
+          else
+            # for more info: https://stackoverflow.com/a/12673543
+            ${pkgs.gnused}/bin/sed -i "" "$1"
+            chmod u+w "$1"
+          fi
+          echo "$1"
+        }
+
+        echo "Replacing symlinks with mutable copies"
+        ${
+          if replaceFiles == ""
+          then "echo 'No files to replace'"
+          else replaceFiles
+        }
+      ''
+      + (optionalString (cfg.dotsDir != "") ''
+        echo ""
+        echo "Redirecting symlinks to dotsDirImpure"
+        ${
+          if symlinkFiles == ""
+          then "echo 'No files to symlink'"
+          else symlinkFiles
+        }
+      '');
   };
 
   symlinkFiles = pipe cfg.parseAttrs [
