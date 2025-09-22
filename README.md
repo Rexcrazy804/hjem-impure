@@ -1,7 +1,7 @@
 # Hjem impure
 Hjem impure provides a script which:
 - Replaces every hjem symlink with writable normal files and directories
-- Links particular symlinks back into your nixos configuration [See Advanced Installation](#advanced-installation)
+- Links particular symlinks back into your nixos configuration | [advanced installation](#advanced-installation)
 
 No more waiting for nixos-rebuilds to modify your dots. Ever.
 
