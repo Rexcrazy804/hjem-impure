@@ -1,0 +1,16 @@
+# stripped example config from Rexcrazy804/booru.hs
+
+[[sources]]
+provider = "danbooru"
+ids = ["5614777", "9590836"]
+
+[filters]
+characters = { list = ["kokomi"], inverted = true }
+
+[preview_filters]
+ratings = { list = ["g"], inverted = true }
+
+[synonyms.characters]
+"kokomi" = ["sangonomiya_kokomi", "sangonomiya kokomi"]
+[synonyms.copyrights]
+"genshin" = ["genshin_impact", "yuanshen"]
