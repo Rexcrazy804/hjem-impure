@@ -1,7 +1,7 @@
 {
   outputs = {self, ...}: {
     hjemModules = {
-      hjem-impure = ./hjem-impure.nix;
+      hjem-impure = ./nix/module.nix;
       default = self.hjemModules.hjem-impure;
     };
   };
