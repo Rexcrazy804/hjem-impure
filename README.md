@@ -12,8 +12,13 @@ First, add hjem-impure to your flake inputs
 ```nix
 {
   inputs = {
-    hjem-impure.url = "github:Rexcrazy804/hjem-impure";      # inputs.nixpkgs.follows NOT required
-    # ...                                                    # ... other inputs
+    hjem-impure = {
+      url = "github:Rexcrazy804/hjem-impure";
+      # these are only required for internal tests,
+      # hence you can set em to nothing
+      inputs.nixpkgs.follows = "";
+      inputs.hjem.follows = "";
+    };
   };
 }
 ```
@@ -21,12 +26,13 @@ First, add hjem-impure to your flake inputs
 Next, add hjem-impure as an extraModule for hjem
 and enable hjem impure for your desired user
 ```nix
-{inputs, ...}:                                              # assuming that you pass inputs as specialArgs
+# assuming that you pass inputs as specialArgs
+{inputs, ...}:
 {
-  hjem.extraModules = [
-    inputs.hjem-impure.hjemModules.default                  # imports the hjemModule
-  ];
-  hjem.users.${myUserName}.impure.enable = true;            # enable hjem-impure
+  # imports the hjemModule
+  hjem.extraModules = [inputs.hjem-impure.hjemModules.default];
+  # enable hjem-impure
+  hjem.users.${myUserName}.impure.enable = true;
 }
 ```
 
@@ -39,33 +45,25 @@ back into your nixos configuration,
 granted that there exists a common dotsDir from which each file/dir is `source`'d
 
 ```nix
+{config, ...}:
 {
   hjem.users.${myUserName} = {
     impure = {
-      enable = true;                                                      # enable hjem-impure
-      dotsDir = "${./myDotsFolder}";                                      # pure path to dotsFolder AS STRING
-      dotsDirImpure = "/home/myuser/nixos/myDotsFolder";                  # impure absolute path to dots folder
+	  # enable hjem-impure
+      enable = true;
+	  # pure path to dotsFolder AS STRING
+      dotsDir = "${./myDotsFolder}";
+	  # impure absolute path to dots folder
+      dotsDirImpure = "/home/myuser/nixos/myDotsFolder";
     };
-
-    # NOTE
-    # by default hjem-impure parses your `files` and `xdg.*.files`
-    # see `impure.parseAttrs` for altering this behavior
 
     xdg.config.files = let
-      dots = config.hjem.users.${myUserName}.impure.dotsDir;              # aforementioned commond dots
-    in {
-      "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";     # use `dots` for overwriting with symlinks to nixos configuration
-      "hypr/hypridle.conf".source = dots + "/hyprland/hypridle.conf";     # use `dots` for overwriting with symlinks to nixos configuration
-    };
-
-    # or alternatively
-    files = let
-      # this is repeated here but you can always use
-      # a top level let in to deduplicate
+	  # aforementioned common dots
       dots = config.hjem.users.${myUserName}.impure.dotsDir;
     in {
-      ".config/hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";
-      ".config/hypr/hypridle.conf".source = dots + "/hyprland/hypridle.conf";
+	  # it is a requirement to use `dots` for the relinking feature
+      "hypr/hyprland.conf".source = dots + "/hyprland/hyprland.conf";
+      "hypr/hypridle.conf".source = dots + "/hyprland/hypridle.conf";
     };
   };
 }
@@ -81,7 +79,7 @@ hjem-impure
 ```
 
 The next nixos-rebuild will overwrite hjem-impure's changes.
-Alternatively you can also re-create hjem's `/nix/store` links using
+Alternatively you can also re-create hjem's immutable links using
 ```bash
 systemd-tmpfiles --user --create
 ```
