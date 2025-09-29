@@ -69,7 +69,7 @@ granted that there exists a common dotsDir from which each file/dir is `source`'
 }
 ```
 
-for a fleshed out configuration and flake example see [zaphkieltest](https://github.com/Rexcrazy804/zaphkieltest/blob/master/configuration.nix#L31C1-L50)
+for a fleshed out configuration see [`nix/test/config.nix`](nix/test/config.nix)
 
 ### Usage
 simply run the below to make your hjem links modifiable
