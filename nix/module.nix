@@ -20,8 +20,15 @@
 
   planter = pkgs.writeShellApplication {
     name = "hjem-impure";
-    text =
-      ''
+    text = ''
+        # avoids running hjem-impure if system is already impure
+        IMPURE_ACTIVE_FILE="${config.xdg.state.files.HJEM_IMPURE_ACTIVE.target}" 
+        if [[ -f  "$IMPURE_ACTIVE_FILE" && $(cat "$IMPURE_ACTIVE_FILE") -eq 1 ]]; then
+          echo "Re-run not required, already impure."
+          echo "See: https://github.com/Rexcrazy804/hjem-impure?tab=readme-ov-file#usage"
+          exit 0
+        fi
+
         function symlink() {
           if [[ -e "$2" && ! -L "$2" ]] ; then
             echo "$2 exists and is not a symlink. Ignoring it." >&2
@@ -59,6 +66,8 @@
           then "echo 'No files to replace'"
           else replaceFiles
         }
+
+        echo 1 > "$IMPURE_ACTIVE_FILE"
       ''
       + (optionalString (cfg.dotsDir != "") ''
         echo ""
@@ -143,5 +152,8 @@ in {
 
     warnings = optional (cfg.dotsDir != "" && symlinkFiles == "") "hjem-impure detected zero files to symlink";
     packages = [planter];
+
+    # When you system is `pure` $XDG_STATE_HOME/HJEM_IMPURE_ACTIVE will be 0
+    xdg.state.files."HJEM_IMPURE_ACTIVE".text = "0";
   };
 }
