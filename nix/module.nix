@@ -32,7 +32,7 @@
         function symlink() {
           if [[ -e "$2" && ! -L "$2" ]] ; then
             echo "$2 exists and is not a symlink. Ignoring it." >&2
-            return 1
+            return 0
           fi
           # prevents ln failing for symlinks that are directories
           if [[ -d "$2" ]] ; then
@@ -47,7 +47,7 @@
           if [[ -d "$1" ]] ; then
             if [[ ! -L "$1" ]] ; then
               echo "$1 exists and is not a symlink. Ignoring it." >&2
-              return 1
+              return 0
             fi
             STORE_PATH=$(realpath "$1")
             rm "$1"
@@ -67,7 +67,7 @@
           else replaceFiles
         }
 
-        echo 1 > "$IMPURE_ACTIVE_FILE"
+        echo 1 > "$IMPURE_ACTIVE_FILE" || echo "[INFO] Unable to write to $IMPURE_ACTIVE_FILE"
       ''
       + (optionalString (cfg.dotsDir != "") ''
         echo ""
