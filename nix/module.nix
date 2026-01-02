@@ -7,7 +7,7 @@
   inherit (lib) mkEnableOption mkIf mkOption literalExpression mkRenamedOptionModule;
   inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep;
   inherit (lib) assertMsg optional optionalString pathExists foldl attrValues;
-  inherit (lib.types) str listOf enum;
+  inherit (lib.types) str listOf enum path nullOr;
 
   cfg = config.impure;
   hjemFileAttrList = [
@@ -69,7 +69,7 @@
 
         echo 1 > "$IMPURE_ACTIVE_FILE" || echo "[INFO] Unable to write to $IMPURE_ACTIVE_FILE"
       ''
-      + (optionalString (cfg.dotsDir != "") ''
+      + (optionalString (cfg.dotsDir != null) ''
         echo ""
         echo "Redirecting symlinks to dotsDirImpure"
         ${
@@ -81,7 +81,7 @@
   };
 
   symlinkFiles = pipe cfg.parseAttrs [
-    (filter (x: cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}"))
+    (filter (x: cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid. Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
     (map (x: "symlink ${cfg.dotsDirImpure}${removePrefix "${cfg.dotsDir}" "${x.source}"} ${x.target}"))
@@ -89,7 +89,7 @@
   ];
 
   replaceFiles = pipe cfg.parseAttrs [
-    (filter (x: ! (cfg.dotsDir != "" && hasPrefix "${cfg.dotsDir}" "${x.source}")))
+    (filter (x: ! (cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}")))
     (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
@@ -102,8 +102,8 @@ in {
     enable = mkEnableOption "hjem impure planting script";
 
     dotsDir = mkOption {
-      type = str;
-      default = "";
+      type = nullOr path;
+      default = null;
       description = "directory containing your dots";
     };
     dotsDirImpure = mkOption {
@@ -145,12 +145,12 @@ in {
   config = mkIf cfg.enable {
     assertions = [
       {
-        assertion = cfg.dotsDir != "" -> cfg.dotsDirImpure != "";
+        assertion = cfg.dotsDir != null -> cfg.dotsDirImpure != "";
         message = "hjem-impure: `dotsDir` set without setting `dotsDirImpure`";
       }
     ];
 
-    warnings = optional (cfg.dotsDir != "" && symlinkFiles == "") "hjem-impure detected zero files to symlink";
+    warnings = optional (cfg.dotsDir != null && symlinkFiles == "") "hjem-impure detected zero files to symlink";
     packages = [planter];
 
     # When you system is `pure` $XDG_STATE_HOME/HJEM_IMPURE_ACTIVE will be 0
