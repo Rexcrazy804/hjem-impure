@@ -10,6 +10,7 @@
 
     hjem.inputs.nixpkgs.follows = "nixpkgs";
     hjem.inputs.smfh.follows = "";
+    hjem.inputs.nix-darwin.follows = "";
   };
 
   outputs = {
