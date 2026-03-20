@@ -148,6 +148,10 @@ in {
         assertion = cfg.dotsDir != null -> cfg.dotsDirImpure != "";
         message = "hjem-impure: `dotsDir` set without setting `dotsDirImpure`";
       }
+      {
+        assertion = cfg.dotsDir != null -> builtins.isString cfg.dotsDir;
+        message = "hjem-impure: `dotsDir` must be a path wrapped in a string: \"\${./your/dots/folder}\"";
+      }
     ];
 
     warnings = optional (cfg.dotsDir != null && symlinkFiles == "") "hjem-impure detected zero files to symlink";
