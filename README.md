@@ -1,5 +1,5 @@
 # Hjem impure
-Hjem impure provides a script which:
+Hjem impure is a [hjem module](https://github.com/feel-co/hjem) which provides a script which:
 - Replaces every hjem symlink with writable normal files and directories
 - Links particular symlinks back into your nixos configuration | [advanced installation](#advanced-installation)
 
@@ -36,7 +36,7 @@ and enable hjem impure for your desired user
 }
 ```
 
-And that's it, after you rebuild your configuraiton
+And that's it, after you rebuild your configuration
 you should have the `hjem-impure` executable.
 
 ### Advanced Installation
