@@ -154,7 +154,7 @@ in {
       }
     ];
 
-    warnings = optional (cfg.dotsDir != null && symlinkFiles == "") "hjem-impure detected zero files to symlink";
+    warnings = optional (cfg.dotsDir != null && symlinkFiles == "") "hjem-impure: detected zero files to symlink";
     packages = [planter];
 
     # When you system is `pure` $XDG_STATE_HOME/HJEM_IMPURE_ACTIVE will be 0
