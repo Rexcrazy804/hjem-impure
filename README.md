@@ -89,6 +89,12 @@ or if you use smfh as the linker
 systemctl start hjem-activate@userName.service
 ```
 
+> [!TIP]
+> If running on darwin system with `smfh` linker (default), use
+> ```
+> launchctl start org.hjem.activate
+> ```
+
 ### How does it work exactly?
 hjem impure module simply reads information hjem uses to plant files in place. 
 This information is converted into a shell script
