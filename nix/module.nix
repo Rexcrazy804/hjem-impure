@@ -5,8 +5,8 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOption literalExpression mkRenamedOptionModule;
-  inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep substring escapeRegex elemAt head;
-  inherit (lib) assertMsg optional optionalString pathExists foldl attrValues isList removeSuffix match;
+  inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep substring escapeRegex elemAt head match;
+  inherit (lib) assertMsg optional optionalString pathExists foldl attrValues isList removeSuffix stringLength;
   inherit (lib.types) str listOf enum path nullOr raw;
 
   cfg = config.impure;
@@ -80,11 +80,12 @@
       '');
   };
 
-  relPathRegex = "(${escapeRegex (removeSuffix "/" cfg.dotsDirImpure)}|/nix/store/[^/]+)(/.+)"; # Regex matches [(dotsDirImpure or "/nix/store/<HASH>-...") "/relPath"]
+  storeLength = (stringLength builtins.storeDir) + 33; # "/nix/store" (10) + "/" (1) + "<HASH>" (32) = len + 33
+  relPathRegex = "(${escapeRegex (removeSuffix "/" cfg.dotsDirImpure)}|${escapeRegex builtins.storeDir}/[^/]+)(.*)"; # Regex matches [(dotsDirImpure or "/nix/store/<HASH>-...") "/relPath"]
   symlinkFiles = pipe cfg.parseAttrs [
     (filter (x:
       if cfg.dotsDir == null # Uses "-relink=" method if dotsDir is unset, symlinkFiles is already guarded by cfg.dotsDirImpure != ""
-      then (substring 43 8 "${x.source}") == "-relink=" # /nix/store/ (11) + <HASH> (32) = 43, "-relink=" (8)
+      then (substring storeLength 8 "${x.source}") == "-relink=" # "/nix/store" (10) + "/" (1) + "<HASH>" (32) = storeLength + 33, "-relink=" (8)
       else cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid. Throws an error if they aren't. "-relink=" method checks on the original passthru.path instead of its build store path to avoid IFD
     (filter (x: assertMsg (pathExists (if cfg.dotsDir == null then x.source.path else x.source)) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
@@ -100,7 +101,7 @@
     (filter (x:
       ! (
         if cfg.dotsDir == null
-        then cfg.dotsDirImpure != "" && ((substring 43 8 "${x.source}") == "-relink=")
+        then cfg.dotsDirImpure != "" && ((substring storeLength 8 "${x.source}") == "-relink=")
         else cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"
       )))
     (map (x: "replace ${x.target}"))
