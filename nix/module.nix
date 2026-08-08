@@ -5,9 +5,9 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOption literalExpression mkRenamedOptionModule;
-  inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep;
-  inherit (lib) assertMsg optional optionalString pathExists foldl attrValues;
-  inherit (lib.types) str listOf enum path nullOr;
+  inherit (lib) map pipe filter hasPrefix removePrefix concatStringsSep substring escapeRegex elemAt head match;
+  inherit (lib) assertMsg optional optionalString pathExists foldl attrValues isList removeSuffix stringLength;
+  inherit (lib.types) str listOf enum path nullOr raw;
 
   cfg = config.impure;
   hjemFileAttrList = [
@@ -69,7 +69,7 @@
 
         echo 1 > "$IMPURE_ACTIVE_FILE" || echo "[INFO] Unable to write to $IMPURE_ACTIVE_FILE"
       ''
-      + (optionalString (cfg.dotsDir != null) ''
+      + (optionalString (cfg.dotsDirImpure != "") ''
         echo ""
         echo "Redirecting symlinks to dotsDirImpure"
         ${
@@ -80,23 +80,49 @@
       '');
   };
 
+  storeLength = (stringLength builtins.storeDir) + 33; # "/nix/store" (10) + "/" (1) + "<HASH>" (32) = len + 33
+  relPathRegex = "(${escapeRegex (removeSuffix "/" cfg.dotsDirImpure)}|${escapeRegex builtins.storeDir}/[^/]+)(.*)"; # Regex matches [(dotsDirImpure or "/nix/store/<HASH>-...") "/relPath"]
   symlinkFiles = pipe cfg.parseAttrs [
-    (filter (x: cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"))
-    # ensures that paths are valid. Throws an error if they aren't
-    (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
-    (map (x: "symlink ${cfg.dotsDirImpure}${removePrefix "${cfg.dotsDir}" "${x.source}"} ${x.target}"))
+    (filter (x:
+      if cfg.dotsDir == null # Uses "-relink=" method if dotsDir is unset, symlinkFiles is already guarded by cfg.dotsDirImpure != ""
+      then (substring storeLength 8 "${x.source}") == "-relink=" # "/nix/store" (10) + "/" (1) + "<HASH>" (32) = storeLength + 33, "-relink=" (8)
+      else cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"))
+    # ensures that paths are valid. Throws an error if they aren't. "-relink=" method checks on the original passthru.path instead of its build store path to avoid IFD
+    (filter (x: assertMsg (pathExists (if cfg.dotsDir == null then x.source.path else x.source)) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
+    (map (x: "symlink ${cfg.dotsDirImpure}${
+      if cfg.dotsDir == null # "-relink=" method extracts the "/relPath" from elem 1 of the relPathRegex match
+      then elemAt (match relPathRegex (toString x.source.path)) 1 # toString on the original passthru.path to avoid copying to store and IFD
+      else removePrefix "${cfg.dotsDir}" "${x.source}"
+    } ${x.target}"))
     (concatStringsSep "\n")
   ];
 
   replaceFiles = pipe cfg.parseAttrs [
-    (filter (x: ! (cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}")))
+    (filter (x:
+      ! (
+        if cfg.dotsDir == null
+        then cfg.dotsDirImpure != "" && ((substring storeLength 8 "${x.source}") == "-relink=")
+        else cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"
+      )))
     (map (x: "replace ${x.target}"))
     (concatStringsSep "\n")
   ];
+
+  relink = path:
+    if isList path # [./. "filename"] workarounds edge case of concatenating paths with illegal store path chracters such as ./. + "@filename!"
+    then let path' = "/${elemAt path 1}"; in pkgs.runCommand "relink=${baseNameOf path'}" {passthru = {path = (head path) + path';};} "cp -a ${head path}${path'} $out"
+    else pkgs.runCommand "relink=${baseNameOf path}" {passthru = {inherit path;};} "cp -a ${path} $out"; # relink ./pathToFile, name relink=... & embeds passthru.path
 in {
   imports = [
     (mkRenamedOptionModule ["impure" "linkFiles"] ["impure" "parseAttrs"])
   ];
+
+  options.relink = mkOption {
+    type = raw;
+    readOnly = true;
+    internal = true;
+    default = relink;
+  };
 
   options.impure = {
     enable = mkEnableOption "hjem impure planting script";
@@ -154,7 +180,7 @@ in {
       }
     ];
 
-    warnings = optional (cfg.dotsDir != null && symlinkFiles == "") "hjem-impure: detected zero files to symlink";
+    warnings = optional (cfg.dotsDirImpure != "" && symlinkFiles == "") "hjem-impure: detected zero files to symlink";
     packages = [planter];
 
     # When you system is `pure` $XDG_STATE_HOME/HJEM_IMPURE_ACTIVE will be 0
