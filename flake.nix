@@ -7,10 +7,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     hjem.url = "github:feel-co/hjem";
-
     hjem.inputs.nixpkgs.follows = "nixpkgs";
-    hjem.inputs.smfh.follows = "";
-    hjem.inputs.nix-darwin.follows = "";
   };
 
   outputs = {
