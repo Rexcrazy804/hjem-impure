@@ -1,5 +1,6 @@
 name: "Hjem impure tests"
 on:
+  workflow_dispatch:
   push:
     branches: [ "master" ]
     paths: ['**.nix']
