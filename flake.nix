@@ -15,13 +15,15 @@
     nixpkgs,
     ...
   } @ inputs: let
-    inherit (nixpkgs.lib) getAttrs mapAttrs nixosSystem;
-    pkgsFor = getAttrs ["x86_64-linux" "aarch64-linux" "aarch64-darwin"] nixpkgs.legacyPackages;
-    eachSystem = fn: mapAttrs fn pkgsFor;
+    inherit (nixpkgs.lib) genAttrs nixosSystem;
+
+    systems = ["x86_64-linux" "aarch64-linux" "aarch64-darwin"];
+    pkgsOf = nixpkgs.legacyPackages;
+    eachSystem = genAttrs systems;
     specialArgs = {inherit inputs self;};
   in {
-    checks = eachSystem (_: pkgs: {
-      hjem-test = pkgs.callPackage ./nix/test {inherit specialArgs;};
+    checks = eachSystem (system: {
+      hjem-test = pkgsOf.${system}.callPackage ./nix/test {inherit specialArgs;};
     });
 
     hjemModules = {
