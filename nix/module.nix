@@ -85,14 +85,14 @@
     (filter (x: cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}"))
     # ensures that paths are valid. Throws an error if they aren't
     (filter (x: assertMsg (pathExists x.source) "hjem-impure: the path ${x.source} DOES NOT EXIST"))
-    (map (x: "symlink ${cfg.dotsDirImpure}${removePrefix "${cfg.dotsDir}" "${x.source}"} ${x.target}"))
+    (map (x: "symlink \"${cfg.dotsDirImpure}${removePrefix "${cfg.dotsDir}" "${x.source}"}\" \"${x.target}\""))
     (concatStringsSep "\n")
   ];
 
   replaceFiles = pipe cfg.parseAttrs [
     (filter (x: x.type == "symlink"))
     (filter (x: ! (cfg.dotsDir != null && hasPrefix "${cfg.dotsDir}" "${x.source}")))
-    (map (x: "replace ${x.target}"))
+    (map (x: "replace \"${x.target}\""))
     (concatStringsSep "\n")
   ];
 in {
